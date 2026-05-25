@@ -1,0 +1,63 @@
+#--data--
+data:
+  dataset_name: "jessicali9530/lfw-dataset"
+  cache_dir: "./data/image_faces"
+  image_size: 128                     #can be set to 256
+  allowed_extensions: [".jpeg",".jpg",".png"]
+
+
+#--data split--
+split:
+  train_split: 0.8         #train and val data split
+  seed: 42
+
+#--model--
+model:
+  embedding_dim: 128       #embedding dimension for the embedding network
+  backbone: "custom_cnn"   #custom-built cnn network or use a pretrained backbone like resnet18(small) or resnet50
+
+#--loss--
+loss:
+  type: "contrastive"      #type of loss to use
+  margin: 2.0              #contrastive loss margin
+
+#--training--
+training:
+  batch_size: 64           #if training on local cpu, please use 4/8 which is a more cpu-friendly batch_size
+  epochs: 5                #number of training epochs
+  learning_rate: 1e-3      #
+  weight_decay: 0.0001     #l2 regularization
+  num_workers: 2           #number of workers for the dataloader
+  log_interval: 20         #steps between loss logging
+  device: "auto"
+  checkpoint_dir: "checkpoints/"   #where to save model weights
+  resume_null: null                #path to checkpoint for resuming
+
+#--validation---
+validation:
+  batch_size: 64
+  num_workers: 2
+  t_sne_epochs: [1,5]              # epochs at which to run t-SNE visualization
+  t_sne_samples: 8                 # how many identifies to show
+  t_sne_images_per_person: 5
+
+#--evaluation--
+evaluation:
+  threshold: 1.0            #decision threshold for inference
+  saved_model_path: "checkpoints/best_model.pth"
+
+#--inference--
+inference:
+  threshold: 1.0          #decision threshold for inference
+  saved_model_path: "checkpoints/best_model.pth"
+
+#--logging & experiment tracking--
+logging:
+  level: "INFO"
+  mlflow_tracking_uri: null
+  mlflow_experiment_name: "siamese_net_face_rec"
+
+#--API--
+api:
+  host: "0.0.0.0"
+  port: 8000
