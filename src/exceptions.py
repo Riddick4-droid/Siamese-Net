@@ -12,3 +12,5 @@ class DataIngestionException(ProjectException):
     pass
 class ModelTrainingException(ProjectException):
     pass
+class ModelEvaluationException(ProjectException):
+    pass

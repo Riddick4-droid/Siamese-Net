@@ -1,3 +1,5 @@
+#these are utitlity functions designed to help in the entire pipeline
+
 import os
 import yaml
 import random

@@ -8,7 +8,9 @@ data:
 
 #--data split--
 split:
-  train_split: 0.8         #train and val data split
+  train_split: 0.72         #train and val data split
+  val_ratio: 0.18
+  test_ratio: 0.10
   seed: 42
 
 #--model--
@@ -44,7 +46,7 @@ validation:
 #--evaluation--
 evaluation:
   threshold: 1.0            #decision threshold for inference
-  saved_model_path: "checkpoints/best_model.pth"
+  output_dir: "artefacts/"
 
 #--inference--
 inference:
