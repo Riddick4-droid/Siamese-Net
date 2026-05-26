@@ -37,6 +37,6 @@ def build_model(config:Dict[str,Any])->SiameseNet:
     """
     embedding_net = build_embedding_network(config=config)
     model= SiameseNet(embedding_net=embedding_net)
-    logger.info("SiameseNet built with backbone: %d", config["model"]["backbone"])
+    logger.info("SiameseNet built with backbone: %s", config["model"]["backbone"])
     return model
 

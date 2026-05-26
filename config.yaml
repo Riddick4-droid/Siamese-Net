@@ -25,9 +25,9 @@ loss:
 
 #--training--
 training:
-  batch_size: 64           #if training on local cpu, please use 4/8 which is a more cpu-friendly batch_size
+  batch_size: 2         #if training on local cpu, please use 4/8 which is a more cpu-friendly batch_size
   epochs: 5                #number of training epochs
-  learning_rate: 1e-3      #
+  learning_rate: 0.001      #
   weight_decay: 0.0001     #l2 regularization
   num_workers: 2           #number of workers for the dataloader
   log_interval: 20         #steps between loss logging
@@ -37,7 +37,7 @@ training:
 
 #--validation---
 validation:
-  batch_size: 64
+  batch_size: 2
   num_workers: 2
   t_sne_epochs: [1,5]              # epochs at which to run t-SNE visualization
   t_sne_samples: 8                 # how many identifies to show
@@ -56,10 +56,14 @@ inference:
 #--logging & experiment tracking--
 logging:
   level: "INFO"
-  mlflow_tracking_uri: null
+  mlflow_tracking_uri: "http://localhost:8000"
   mlflow_experiment_name: "siamese_net_face_rec"
 
 #--API--
 api:
   host: "0.0.0.0"
-  port: 8000
+  port: 8080
+
+#if you want to start the mlflow server:
+
+#mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri ./mlruns --default-artifact-root ./mlflow-artifacts

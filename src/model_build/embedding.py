@@ -19,15 +19,23 @@ class ResidualBlock(nn.Module):
     """
     def __init__(self, in_channels: int, out_channels:int, stride:int=1):
         super(ResidualBlock, self).__init__()
-        self.conv1=nn.Conv2d(in_channels=in_channels, out_channels=out_channels,
-                             kernel_size=3,stride=stride, padding=1, bias=False)
+        self.conv1=nn.Conv2d(in_channels=in_channels, 
+                             out_channels=out_channels,
+                             kernel_size=3,
+                             stride=stride, 
+                             padding=1, 
+                             bias=False)
+        
         self.bn1=nn.BatchNorm2d(num_features=out_channels)
         self.relu1 = nn.ReLU(inplace=True)
 
-        self.conv2=nn.Conv2d(in_channels=out_channels, out_channels=out_channels, 
-                             kernel_size=3,stride=stride, padding=1, bias=False)
+        self.conv2=nn.Conv2d(in_channels=out_channels, 
+                             out_channels=out_channels, 
+                             kernel_size=3,
+                             stride=1,
+                             padding=1, 
+                             bias=False)
         self.bn2=nn.BatchNorm2d(num_features=out_channels)
-        #self.relu2=nn.ReLU(inplace=True)
 
         #skip connection : if dimensions change (stride > 1 or channel change), adjust
 
@@ -35,10 +43,15 @@ class ResidualBlock(nn.Module):
 
         if stride != 1 or in_channels != out_channels:
             self.skip = nn.Sequential(
-                nn.Conv2d(in_channels=in_channels, out_channels=out_channels, 
-                          kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(in_channels=in_channels, 
+                          out_channels=out_channels, 
+                          kernel_size=1, 
+                          stride=stride, 
+                          bias=False),
                 nn.BatchNorm2d(num_features=out_channels)
             )
+        else:
+            self.skip = nn.Identity()
 
     def forward(self, x):
         identity = self.skip(x)

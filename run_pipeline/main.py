@@ -29,7 +29,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="available commands")
 
     def add_config_args(p):
-        p.add_argument("--config", required=True, help="path to yaml configs file")
+        p.add_argument("--config", required=True, type=str,help="path to yaml configs file")
 
     #ingest
     p_ingest = subparsers.add_parser("ingest", help="download and cache the dataset")
@@ -66,6 +66,7 @@ def main():
         from src.data_extractor.data_ingestion import download_and_cache_dataset
         download_and_cache_dataset(config)
         logger.info("Data ingestion completed.")
+        
     elif args.command == "train":
         from src.train_model.trainer import train
         train(config)

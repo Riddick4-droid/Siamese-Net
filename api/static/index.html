@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Similarity Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .upload-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .upload-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        .upload-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .drop-area {
+            border: 2px dashed #aaa;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s;
+            background: #fafafa;
+        }
+        .drop-area:hover, .drop-area.dragover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        .drop-area img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .drop-area p {
+            color: #777;
+            font-size: 14px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            margin-bottom: 20px;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            display: none;
+        }
+        .result.visible {
+            display: block;
+        }
+        .distance {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .verdict {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .verdict.same {
+            color: #28a745;
+        }
+        .verdict.different {
+            color: #dc3545;
+        }
+        .threshold-info {
+            font-size: 14px;
+            color: #666;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Face Similarity Checker</h1>
+        <div class="upload-row">
+            <div class="upload-box" id="box1">
+                <label class="upload-label">Face 1</label>
+                <div class="drop-area" id="drop1">
+                    <p>Click or drop image here</p>
+                    <img id="preview1" src="" alt="">
+                </div>
+                <input type="file" id="file1" accept="image/jpeg,image/png,image/jpg">
+            </div>
+            <div class="upload-box" id="box2">
+                <label class="upload-label">Face 2</label>
+                <div class="drop-area" id="drop2">
+                    <p>Click or drop image here</p>
+                    <img id="preview2" src="" alt="">
+                </div>
+                <input type="file" id="file2" accept="image/jpeg,image/png,image/jpg">
+            </div>
+        </div>
+        <button class="btn" id="compareBtn">Compare Faces</button>
+        <div class="result" id="result">
+            <div class="verdict" id="verdict"></div>
+            <div class="distance" id="distValue"></div>
+            <div class="threshold-info" id="thresholdInfo"></div>
+        </div>
+        <div class="error" id="errorMsg"></div>
+    </div>
+
+    <script>
+        const file1 = document.getElementById('file1');
+        const file2 = document.getElementById('file2');
+        const drop1 = document.getElementById('drop1');
+        const drop2 = document.getElementById('drop2');
+        const preview1 = document.getElementById('preview1');
+        const preview2 = document.getElementById('preview2');
+        const compareBtn = document.getElementById('compareBtn');
+        const resultDiv = document.getElementById('result');
+        const verdict = document.getElementById('verdict');
+        const distValue = document.getElementById('distValue');
+        const thresholdInfo = document.getElementById('thresholdInfo');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Helper: set up drag & drop + click for an upload box
+        function setupUpload(dropArea, input, preview) {
+            dropArea.addEventListener('click', () => input.click());
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                        dropArea.querySelector('p').style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Drag & drop
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    const event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            });
+        }
+
+        setupUpload(drop1, file1, preview1);
+        setupUpload(drop2, file2, preview2);
+
+        compareBtn.addEventListener('click', async () => {
+            if (!file1.files[0] || !file2.files[0]) {
+                showError('Please select both images.');
+                return;
+            }
+
+            compareBtn.disabled = true;
+            compareBtn.textContent = 'Comparing...';
+            hideError();
+            hideResult();
+
+            const formData = new FormData();
+            formData.append('img1', file1.files[0]);
+            formData.append('img2', file2.files[0]);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Prediction failed');
+                }
+                const data = await response.json();
+                displayResult(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                compareBtn.disabled = false;
+                compareBtn.textContent = 'Compare Faces';
+            }
+        });
+
+        function displayResult(data) {
+            resultDiv.classList.add('visible');
+            distValue.textContent = data.distance.toFixed(4);
+            thresholdInfo.textContent = `(threshold: ${data.threshold})`;
+            if (data.is_same_person) {
+                verdict.textContent = 'Same Person';
+                verdict.className = 'verdict same';
+            } else {
+                verdict.textContent = 'Different Persons';
+                verdict.className = 'verdict different';
+            }
+        }
+
+        function hideResult() {
+            resultDiv.classList.remove('visible');
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMsg.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
+#to run the UI:
+#use:
+http://localhost:5000/static/index.html

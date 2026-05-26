@@ -224,7 +224,7 @@ def train(config: Dict[str, Any])->torch.nn.Module:
                     mlflow.log_metric("val accuracy", val_acc, step=epoch)
                 
                 #t-SNE visualisation at specified epochs
-                if epoch in config["validation"].get("t_sne_epochs",[]):
+                if epoch in config["validation"].get("t_sne_epochs",[]): #only plots at epoch 1 and 5, you can alter that in configs or by putting values in the suare bracket
                     tsne_save = ckpt_dir / f"tsne_epoch_{epoch}.png"
                     _visualize_embeddings(
                         model,
@@ -278,8 +278,8 @@ def _final_evaluation(model, dataloader, device, config, artefact_dir, mlflow_ac
         for img1, img2, labels in dataloader:
             img1, img2 = img1.to(device), img2.to(device)
             _, _, distances = model(img1, img2)
-            all_distances.extend(distances.cpu().numpy())
-            all_labels.extend(labels.squeeze().cpu().numpy())
+            all_distances.extend(distances.cpu().numpy().flatten().tolist())
+            all_labels.extend(labels.cpu().numpy().flatten().tolist())
 
     distances = np.array(all_distances)
     labels = np.array(all_labels)

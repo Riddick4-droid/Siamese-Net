@@ -65,33 +65,37 @@ class SiameseDataset(Dataset):
     def __len__(self)->int:
         return len(self.samples)
     def __getitem__(self, index:int)->Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        person1, img1_name = self.samples[index]
+        person1, img1_path = self.samples[index]
+
+        person_for_img2_path = person1 #intiliaze with person1 for positive pairs
 
         #decide pair type
         if person1 in self.multi_images_per_person and random.random() < 0.5:
             #positive pair: same person, different image
-            img2_name = random.choice(self.person_to_images[person1])
+            img2_path = random.choice(self.person_to_images[person1])
             attempts=0
-            while img2_name == img1_name and len(self.person_to_images[person1]) > 1:
+            while img2_path == img1_path and len(self.person_to_images[person1]) > 1:
                 img2_name = random.choice(self.person_to_images[person1])
                 attempts+=1
                 if attempts > 10:
                     break
-                label=1.0
-                person2  = person1 #this helps as set person2 to avoid value error
+            label=1.0
+
         else:
             #negative pair: different person
             person2 = random.choice([p for p in self.person_to_images if p != person1])
-            img2_name = random.choice(self.person_to_images[person2])
+            img2_path = random.choice(self.person_to_images[person2])
             label = 0.0
+            person_for_img2_path = person2
 
         #load images
-        img1 = Image.open(self.root_dir / person1/ img1_name).convert("RGB")
-        img2 = Image.open(self.root_dir / person2 / img2_name).convert("RGB")
+        img1 = Image.open(self.root_dir / person1/ img1_path).convert("RGB")
+        img2 = Image.open(self.root_dir / person_for_img2_path / img2_path).convert("RGB")
 
         if self.transform:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
+
         return img1, img2, torch.tensor([label], dtype=torch.float32)
     
 def create_dataset(config:Dict)->Tuple[SiameseDataset, SiameseDataset, SiameseDataset]:
@@ -153,9 +157,14 @@ def create_dataset(config:Dict)->Tuple[SiameseDataset, SiameseDataset, SiameseDa
     ])
 
     #create train, val, test sets
-    train_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, transform=transform,allowed_persons=train_persons)
-    val_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, transform=transform,allowed_persons=val_persons)
-    test_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, transform=transform,allowed_persons=test_persons) if test_persons else None
+    train_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, 
+                                   transform=transform,allowed_persons=train_persons)
+    
+    val_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, 
+                                 transform=transform,allowed_persons=val_persons)
+    
+    test_dataset = SiameseDataset(root_dir=root_dir, person_to_image_dict=person_to_images, 
+                                  transform=transform,allowed_persons=test_persons) if test_persons else None
 
     logger.info(
         "splits: train=%d, val=%s, test=%d identities",
