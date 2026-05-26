@@ -108,3 +108,12 @@ def compute_roc_metrics(distance:np.ndarray, labels:np.ndarray)->float:
     logger.info("ROC AUC: %.4f, EER: %.4f", roc_auc, eer)
     return metrics
 
+# compute_accuracy: simple accuracy for a given threshold.
+
+# compute_best_threshold: grid search over 200 thresholds to find the one that maximizes accuracy; returns both best threshold and accuracy.
+
+# compute_eer_from_roc: calculates the Equal Error Rate from the ROC curve by finding where FPR ≈ 1 − TPR.
+
+# compute_roc_metrics: the main evaluation function that takes distances and labels, computes ROC, AUC, EER, best threshold, best accuracy, and confusion matrix. Returns a structured dict for easy logging or serialization.
+
+# All functions operate on NumPy arrays (as collected during evaluation), keeping them independent of PyTorch.
